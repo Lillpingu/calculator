@@ -1,7 +1,4 @@
-use core::f64;
-use std::ops::Mul;
-
-use crate::traits::Operation;
+use crate::traits::{CalcValue, Operation};
 pub struct Multiplication;
 impl Multiplication {
     pub fn new() -> Self {
@@ -9,8 +6,9 @@ impl Multiplication {
     }
 }
 impl Operation for Multiplication {
-    fn calculate(&self, a: f64, b: f64) -> Result<f64, String> {
-        let multiply = a.mul(b);
+    fn calculate(&self, a: CalcValue, b: CalcValue) -> Result<CalcValue, String> {
+        
+        let multiply = a.mul(&b);
         Ok(multiply)
     }
     fn description(&self) -> () {

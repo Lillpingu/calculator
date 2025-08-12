@@ -1,4 +1,4 @@
-use crate::traits::Operation;
+use crate::traits::{CalcValue, Operation};
 
 pub struct Addition;
 impl Addition {
@@ -7,9 +7,8 @@ impl Addition {
     }
 }
 impl Operation for Addition {
-    fn calculate(&self, a: f64, b: f64) -> Result<f64, String> {
-        let add = a + b;
-        Ok(add)
+    fn calculate(&self, a: CalcValue, b: CalcValue) -> Result<CalcValue, String> {
+        Ok(a.add(&b))
     }
     fn description(&self) -> () {
         println!("Addition operation");

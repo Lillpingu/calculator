@@ -1,4 +1,4 @@
-use crate::traits::Operation;
+use crate::traits::{CalcValue, Operation};
 
 pub struct Division;
 impl Division {
@@ -7,11 +7,8 @@ impl Division {
     }
 }
 impl Operation for Division {
-    fn calculate(&self, a: f64, b: f64) -> Result<f64, String> {
-        if b == 0.0 {
-            return Err("Division by zero is not allowed".to_string());
-        }
-        Ok(a / b)
+    fn calculate(&self, a: CalcValue, b: CalcValue) -> Result<CalcValue, String> {
+        Ok(a.div(&b)?)
     }
     fn description(&self) -> () {
         println!("Division operation");

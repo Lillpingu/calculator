@@ -4,7 +4,7 @@ mod subtraction;
 mod division;
 mod multiplication;
 
-use crate::traits::Operation;
+use crate::traits::{CalcValue, Operation};
 use std::io;
 fn main() {
     // interactive loop to read user input
@@ -32,44 +32,49 @@ fn main() {
         match parse_input(input) {
             Ok((left_str, op_char, right_str)) => {
                 // Detect whether both operands look like integers (no decimal point or exponent).
-                let left_is_int = !left_str.contains('.') && !left_str.contains('e') && !left_str.contains('E');
-                let right_is_int = !right_str.contains('.') && !right_str.contains('e') && !right_str.contains('E');
+                let left_is_int = left_str.len() > 9 && !left_str.contains('e') && !left_str.contains('E');
+                let right_is_int = right_str.len() > 9 && !right_str.contains('e') && !right_str.contains('E');
+                println!("Parsed input: left = {}, right = {}", left_is_int, right_is_int);
                 
-                // If both are integers and the operator is addition, subtraction, or multiplication,
-                // do the arithmetic with i128 to avoid floating‐point rounding.
-                if left_is_int && right_is_int && matches!(op_char, '+' | '-' | '*' | 'x' | 'X' | '×') {
-                    match (left_str.parse::<i128>(), right_str.parse::<i128>()) {
-                        (Ok(a_i), Ok(b_i)) => {
-                            match op_char {
-                                '+' => println!("Result: {}", a_i + b_i),
-                                '-' => println!("Result: {}", a_i - b_i),
-                                '*' | 'x' | 'X' | '×' => println!("Result: {}", a_i * b_i),
-                                _ => unreachable!(),
-                            }
-                        }
-                        _ => {
-                            println!("Error: one of the integers is too large for i128");
-                        }
-                    }
-                    continue;
-                }
                 
                 // Otherwise fall back to floating point.  This handles division and any
                 // input with a decimal point or exponent.
-                let a: f64 = match left_str.parse() {
-                    Ok(n) => n,
-                    Err(_) => {
-                        println!("Invalid number: {}", left_str);
-                        continue;
+                let a: CalcValue = if left_is_int {
+                    match left_str.parse::<i128>() {
+                        Ok(val) => CalcValue::Int(val),
+                        Err(e) => {
+                            println!("Error parsing left operand: {}", e);
+                            continue; // skip to the next iteration
+                        }
+                    }
+                } else {
+                    match left_str.parse::<f64>() {
+                        Ok(val) => CalcValue::Float(val),
+                        Err(e) => {
+                            println!("Error parsing left operand: {}", e);
+                            continue; // skip to the next iteration
+                        }
                     }
                 };
-                let b: f64 = match right_str.parse() {
-                    Ok(n) => n,
-                    Err(_) => {
-                        println!("Invalid number: {}", right_str);
-                        continue;
+                let b: CalcValue = if right_is_int {
+                    match right_str.parse::<i128>() {
+                        Ok(val) => CalcValue::Int(val),
+                        Err(e) => {
+                            println!("Error parsing right operand: {}", e);
+                            continue; // skip to the next iteration
+                        }
+                    }
+                } else {
+                    match right_str.parse::<f64>() {
+                        Ok(val) => CalcValue::Float(val),
+                        Err(e) => {
+                            println!("Error parsing right operand: {}", e);
+                            continue; // skip to the next iteration
+                        }
                     }
                 };
+
+
                 match op_char {
                     '+' => {
                         let op = addition::Addition::new();
@@ -98,11 +103,11 @@ fn main() {
 
 // Generic calculator wrapper that prints the result or error.
 // Takes an operation that implements the `Operation` trait and two numbers.
-fn calculate_with_values<O: Operation>(operation: O, a: f64, b: f64) {
+fn calculate_with_values<O: Operation>(operation: O, a:traits::CalcValue, b: traits::CalcValue) {
     
     operation.description(); // Print the description of the operation
     match operation.calculate(a, b) {
-        Ok(result) => println!("Result: {}", result),
+        Ok(result) => println!("Result: {:?}", result),
         Err(e) => println!("Error: {}", e),
     }
 }
