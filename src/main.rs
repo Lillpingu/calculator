@@ -31,31 +31,8 @@ fn main() {
         // if parsing succeeds, perform the calculation
         match parse_input(input) {
             Ok((left_str, op_char, right_str)) => {
-                // Detect whether both operands look like integers (no decimal point or exponent).
-                let left_is_int = !left_str.contains('.') && !left_str.contains('e') && !left_str.contains('E');
-                let right_is_int = !right_str.contains('.') && !right_str.contains('e') && !right_str.contains('E');
                 
-                // If both are integers and the operator is addition, subtraction, or multiplication,
-                // do the arithmetic with i128 to avoid floating‐point rounding.
-                if left_is_int && right_is_int && matches!(op_char, '+' | '-' | '*' | 'x' | 'X' | '×') {
-                    match (left_str.parse::<i128>(), right_str.parse::<i128>()) {
-                        (Ok(a_i), Ok(b_i)) => {
-                            match op_char {
-                                '+' => println!("Result: {}", a_i + b_i),
-                                '-' => println!("Result: {}", a_i - b_i),
-                                '*' | 'x' | 'X' | '×' => println!("Result: {}", a_i * b_i),
-                                _ => unreachable!(),
-                            }
-                        }
-                        _ => {
-                            println!("Error: one of the integers is too large for i128");
-                        }
-                    }
-                    continue;
-                }
-                
-                // Otherwise fall back to floating point.  This handles division and any
-                // input with a decimal point or exponent.
+                // parse the left and right parts of the input as f64
                 let a: f64 = match left_str.parse() {
                     Ok(n) => n,
                     Err(_) => {
@@ -99,12 +76,16 @@ fn main() {
 // Generic calculator wrapper that prints the result or error.
 // Takes an operation that implements the `Operation` trait and two numbers.
 fn calculate_with_values<O: Operation>(operation: O, a: f64, b: f64) {
-    
     operation.description(); // Print the description of the operation
     match operation.calculate(a, b) {
         Ok(result) => println!("Result: {}", result),
         Err(e) => println!("Error: {}", e),
     }
+}
+
+fn normalize_decimal(s: &str) -> String {
+    // Accept "," or "." as decimal; normalize commas to dots for Rust parsing.
+    s.trim().replace(',', ".")
 }
 
 /// Parse user input of the form \"number operator number\" into its parts.
@@ -128,8 +109,10 @@ fn parse_input(input: &str) -> Result<(String, char, String), String> {
     }
     // if no operator was found, return an error
     let idx = op_index.ok_or_else(|| String::from("No operator found in input"))?;
-    let left = input[..idx].trim().to_string();
-    let right = input[idx + 1..].trim().to_string();
+    //let left = input[..idx].trim().to_string();
+    //let right = input[idx + 1..].trim().to_string();
+    let left = normalize_decimal(&input[..idx]);
+    let right = normalize_decimal(&input[idx + 1..]);
     Ok((left, op_char, right))
 }
 
